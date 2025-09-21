@@ -84,20 +84,23 @@ class WebScanner(object):
     def IsOk(self) -> bool:
         # check if the domain is up 
         self.req = self.session.get(self.finalUrl, headers=self.Headers, timeout=10, allow_redirects=False)
-        #print(self.req.text)
-        return self.req if self.req else False
+        return True if self.req.status_code == 200 else False
     def ParseHtml(self) -> object:
         if self.IsOk():
             console.print("[bold green] We good to go[/ bold green]")
             self.parseHtml = BeautifulSoup(self.req.text, "html.parser")
             console.print("[bold gray]The request response has been parsed[/ bold gray]")
-            self.fileName = f"{self.urlBase.split('//')[1].replace('.', '_')}.txt"
+            self.fileName = f"{self.urlBase.replace("http", "_").replace(":", "_").replace("//", "_").replace('.', '_')}.txt"
             with open(self.fileName, "w", encoding="utf-8") as ff:
                 try:
                     ff.writelines(self.req.text)
                     console.print(f"[bold green] Source code saved to {self.fileName} [/bold green]")
                 except Exception as e:
                     print(f"[red] Catch(e): {e} [red]")   
+        else:
+            console.print(f"[red] {self.finalUrl} may not be up[/red]")
+            console.print("[bold yellow]Try again later[/ bold yellow]")
+            exit()
         #console.print("[bold red] Unable to parse the html response[/ bold red]")
         #console.print(f"Status code: [bold yellow] {self.req.status_code}")
         #self.ExtractEndpoints() this one 
@@ -114,21 +117,24 @@ class WebScanner(object):
             print(e)
     def Robots(self):
         # sitemap.xml , robots.txt
-        self.robots = requests.get(self.finalUrl+"/robots.txt", timeout=10, allow_redirects=False)
+        self.robots = requests.get(self.finalUrl+"/robots.txt", headers=self.Headers, timeout=10, allow_redirects=False)
         time.sleep(delays)
-        self.sitemap = requests.get(self.finalUrl+"/sitemap.xml", timeout=10, allow_redirects=False)
+        #self.sitemap = requests.get(self.finalUrl+"/sitemap.xml", headers=self.Headers, timeout=10, allow_redirects=False)
         if self.robots.ok:
             console.print("[bold green] Parsing robots endpoints response ...[/ bold green]")
+            console.print("Printing robots ...")
             self.parseRobots = BeautifulSoup(self.robots.text, "html.parser") # extract endpoints
+            print(self.parseRobots)
         else:
             console.print(f"Returned a [{self.robots.status_code}] status code")
-        if self.sitemap.ok:
-            console.print("[bold green] Parsing sitemap response ... [/ bold green]")
-            self.parseSitemap = BeautifulSoup(self.sitemap.text, "html.parser") 
-        else:
-            console.print(f"Returned a [{self.sitemap.status_code}] status code")
+        #if self.sitemap.ok:
+         #   console.print("[bold green] Parsing sitemap response ... [/ bold green]")
+          #  self.parseSitemap = BeautifulSoup(self.sitemap.text, "html.parser") 
+           # print(self.parseSitemap)
+        #else:
+         #   console.print(f"Returned a [{self.sitemap.status_code}] status code")
             return ""
-        return  return self.parseRobots # (self.parseRobots, self.parseSitemap) if all([self.parseRobots, self.parseSitemap]) else "" # use xml parser
+        return self.parseRobots #(self.parseRobots, self.parseSitemap) if all([self.parseRobots, self.parseSitemap]) else ""
     def InspectCodeSource(self):
         ...
     def IsWordpressSite(self) -> bool:
