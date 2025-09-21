@@ -128,7 +128,7 @@ class WebScanner(object):
         else:
             console.print(f"Returned a [{self.sitemap.status_code}] status code")
             return ""
-        return (self.parseRobots, self.parseSitemap) if all(self.parseRobots, self.parseSitemap) else ""
+        return  return self.parseRobots # (self.parseRobots, self.parseSitemap) if all([self.parseRobots, self.parseSitemap]) else "" # use xml parser
     def InspectCodeSource(self):
         ...
     def IsWordpressSite(self) -> bool:
